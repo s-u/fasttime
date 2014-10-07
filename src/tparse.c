@@ -21,8 +21,8 @@ SEXP parse_ts(SEXP str, SEXP sRequiredComp) {
     for (i = 0; i < n; i++) {
 	const char *c = CHAR(STRING_ELT(str, i));
 	int comp = 0;
+	double ts = 0.0;
 	if (DIGIT(*c)) {
-	    double ts = 0.0;
 	    int y = 0, m = 0, d = 0, h = 0, mi = 0;
 	    while (DIGIT(*c)) { y = y * 10 + (*c - '0'); c++; }
 	    if (y < 100) y += 2000;
@@ -64,9 +64,8 @@ SEXP parse_ts(SEXP str, SEXP sRequiredComp) {
 		    }
 		}
 	    }
-	    if (comp >= required_components)
-		tsv[i] = ts;
 	}
+	tsv[i] = (comp >= required_components) ? ts : NA_REAL;
     }
     return res;
 }
