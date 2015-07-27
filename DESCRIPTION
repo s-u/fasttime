@@ -1,9 +1,9 @@
 Package: fasttime
 Version: 1.0-1
-Title: Fast utility function for time parsing and conversion
+Title: Fast Utility Function for Time Parsing and Conversion
 Author: Simon Urbanek <simon.urbanek@r-project.org>
 Maintainer: Simon Urbanek <simon.urbanek@r-project.org>
-Description: This package provides fast functions for timestamp
+Description: Fast functions for timestamp
 	manipulation that avoid system calls and take shortcuts
 	to facilitate operations on very large data.
 License: GPL-2
