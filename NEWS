@@ -1,0 +1,17 @@
+NEWS for fasttime package
+
+0.1-2	(under development)
+    o	fix fastPOSIXct() example to use GMT when generating test
+	timestamp range, otherwise R may generate timestamps before
+	the epoch in timezones west of GMT (#2)
+
+    o	fix handling of year 2100 which is not a leap year. The
+	supported date range in fastPOSIXct() is now 1970..2199.
+
+
+0.1-1	2015-07-27
+    o	properly generate NA for invalid entries
+
+
+0.1-0	2011-09-09
+    o	first public version providing fastPOSIXct()
