@@ -8,6 +8,8 @@ NEWS for fasttime package
     o	fix handling of year 2100 which is not a leap year. The
 	supported date range in fastPOSIXct() is now 1970..2199.
 
+    o	fix 32-bit integer overflow when computing year offset (#3)
+
 
 0.1-1	2015-07-27
     o	properly generate NA for invalid entries

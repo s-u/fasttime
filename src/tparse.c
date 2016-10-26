@@ -2,12 +2,15 @@
 
 #include <Rinternals.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #define DIGIT(X) ((X) >= '0' && (X) <= '9')
 
 /* start of each month in seconds */
 static const int cml[] = { 0, 0, 2678400, 5097600, 7776000, 10368000, 13046400, 15638400,
 			   18316800, 20995200, 23587200, 26265600, 28857600, 31536000 };
+
+typedef int64_t time_int_t;
 
 SEXP parse_ts(SEXP str, SEXP sRequiredComp) {
     SEXP res;
@@ -34,10 +37,10 @@ SEXP parse_ts(SEXP str, SEXP sRequiredComp) {
 		continue;
 	    } else {
 		/* adjust for all leap years prior to the current one */
-		ts += ((int)((y + 1) / 4)) * 86400;
+	      ts += ((time_int_t)((y + 1) / 4)) * (time_int_t) 86400;
 		if (y > 130) /* 2100 is an exception - not a leap year */
 		    ts -= 86400;
-		ts += y * 31536000;
+		ts += ((time_int_t) y) * ((time_int_t) 31536000);
 		comp++;
 		while (*c && !DIGIT(*c)) c++;
 		if (*c) {
