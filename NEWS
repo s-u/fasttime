@@ -1,6 +1,6 @@
 NEWS for fasttime package
 
-0.1-2	(under development)
+0.1-2	2016-10-26
     o	fix fastPOSIXct() example to use GMT when generating test
 	timestamp range, otherwise R may generate timestamps before
 	the epoch in timezones west of GMT (#2)
