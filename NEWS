@@ -1,5 +1,9 @@
 NEWS for fasttime package
 
+0.1-3	2018-01-05
+    o	use registered C symbol for faster look-up
+
+
 0.1-2	2016-10-26
     o	fix fastPOSIXct() example to use GMT when generating test
 	timestamp range, otherwise R may generate timestamps before
