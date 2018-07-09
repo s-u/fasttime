@@ -16,7 +16,7 @@
   parsing and no system calls.
 }
 \usage{
-fastPOSIXct(x, tz = NULL, required.components = 3L)
+fastPOSIXct(x, tz, required.components = 3L)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
