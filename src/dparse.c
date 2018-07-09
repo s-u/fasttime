@@ -15,20 +15,26 @@ SEXP parse_date(SEXP str, SEXP sRequiredComp) {
     SEXP res;
     double *tsv;
     int required_components = Rf_asInteger(sRequiredComp);
-    int n, i;
+    int n, i, comp, ts;
     if (TYPEOF(str) != STRSXP) Rf_error("invalid date vector");
     n = LENGTH(str);
     res = Rf_allocVector(REALSXP, n);
     tsv = REAL(res);
     for (i = 0; i < n; i++) {
     	const char *c = CHAR(STRING_ELT(str, i));
-    	int comp = 0;
-    	double ts = 0.0;
+        comp = 0;
+        ts = 0;
     	if (DIGIT(*c)) {
     	    int y = 0, m = 0, d = 0;
-    	    while (DIGIT(*c)) { y = y * 10 + (*c - '0'); c++; }
-    	    if (y < 100) y += 2000;
-    	    y -= 1970;
+    	    while (DIGIT(*c)) {
+    	        y = y * 10 + (*c - '0');
+    	        c++;
+    	    }
+    	    if (y < 100) {
+    	        y += 30;   
+    	    } else {
+    	        y -= 1970;   
+    	    }
     	    /* we only support the range of 1970-2199 to cover
     	       unsigned int POSIX time without getting into more leap year mess */
     	    if (y < 0 || y >= 230 ) {
@@ -38,15 +44,20 @@ SEXP parse_date(SEXP str, SEXP sRequiredComp) {
         		/* adjust for all leap years prior to the current one */
         	    ts += ((time_int_t)((y + 1) / 4)) * (time_int_t) 1;
         		if (y > 130) /* 2100 is an exception - not a leap year */
-        		    ts -= 1;
+        		    ts--;
         		ts += ((time_int_t) y) * ((time_int_t) 365);
         		comp++;
         		while (*c && !DIGIT(*c)) c++;
         		if (*c) {
-        		    while (DIGIT(*c)) { m = m * 10 + (*c - '0'); c++; }
+        		    while (DIGIT(*c)) {
+        		        m = m * 10 + (*c - '0');
+        		        c++;
+        		    }
         		    if (m > 0 && m < 13) {
             			ts += cml[m];
-            			if (m > 2 && (y & 3) == 2 && y != 130 /* 2100 again */) ts += 1;
+            			if (m > 2 && (y & 3) == 2 && y != 130 /* 2100 again */) {
+            			    ts++;   
+            			}
             			comp++;
             			while (*c && !DIGIT(*c)) c++;
             			if (*c) {
