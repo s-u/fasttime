@@ -6,7 +6,7 @@
 
 #define DIGIT(X) ((X) >= '0' && (X) <= '9')
 
-/* start of each month in seconds */
+/* start of each month in days */
 static const int cml[] = { 0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 
 typedef int64_t time_int_t;
@@ -35,16 +35,33 @@ SEXP parse_date(SEXP str, SEXP sRequiredComp) {
     	    } else {
     	        y -= 1970;   
     	    }
-    	    /* we only support the range of 1970-2199 to cover
-    	       unsigned int POSIX time without getting into more leap year mess */
-    	    if (y < 0 || y >= 230 ) {
-        		tsv[i] = NA_REAL;
-        		continue;
+    	    /* we only support the range of 1901-2899 to cover
+    	       unsigned int dates without getting into more leap year mess */
+    	    if (y <= -70) {
+	            tsv[i] = NA_REAL;
+	            continue;
     	    } else {
         		/* adjust for all leap years prior to the current one */
-        	    ts += ((time_int_t)((y + 1) / 4)) * (time_int_t) 1;
-        		if (y > 130) /* 2100 is an exception - not a leap year */
-        		    ts--;
+                if (y < 0) {
+                    ts -= ((time_int_t)(((y * -1) + 1) / 4)) * (time_int_t) 1;
+                } else {
+                    ts += ((time_int_t)((y + 1) / 4)) * (time_int_t) 1;
+                    if (y > 130) {
+                        /* compensate for 2100, 2200, 2300, 2500, 2600, 2700,
+                         * NOT leap years */
+                        if (y <= 230) {
+                            ts--;
+                        } else if (y <= 330) {
+                            ts -= 2;
+                        } else if (y <= 530) {
+                            ts -= 3;
+                        } else {
+                            tsv[i] = NA_REAL;
+                            continue;
+                        }
+                    }
+                }
+        		
         		ts += ((time_int_t) y) * ((time_int_t) 365);
         		comp++;
         		while (*c && !DIGIT(*c)) c++;
@@ -55,8 +72,9 @@ SEXP parse_date(SEXP str, SEXP sRequiredComp) {
         		    }
         		    if (m > 0 && m < 13) {
             			ts += cml[m];
-            			if (m > 2 && (y & 3) == 2 && y != 130 /* 2100 again */) {
-            			    ts++;   
+            			if (m > 2 && (y & 3) == 2 &&
+                            y != 130 && y !=  230 && y != 330 && y != 530 /* 2100 again */) {
+            			    ts++;
             			}
             			comp++;
             			while (*c && !DIGIT(*c)) c++;
