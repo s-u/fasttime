@@ -10,7 +10,7 @@
   interpretation is fixed: year, month, day, hour, minute, second.
   Note that only true (positive) POSIX dates (since 1970-01-01 00:00:00)
   are supported and \code{fastPOSIXct} accepts dates up to year 2199.
- 
+
   It is extremely fast (compared to \code{as.POSIXct} by several orders
   of magnitude (on some platfroms 1000x faster) since it uses pure text
   parsing and no system calls.
@@ -46,13 +46,13 @@ fastPOSIXct(x, tz = NULL, required.components = 3L)
 \examples{
   ## let us generate a bunch of random timestamps until today
   ts <- as.character(.POSIXct(runif(1e4) * unclass(Sys.time()), "GMT"))
- 
+
   ## convert them using as.POSIXct
   system.time(a <- as.POSIXct(ts, "GMT"))
- 
+
   ## same using the fast method
   system.time(b <- fastPOSIXct(ts, "GMT"))
- 
+
   identical(a, b)
 }
 \keyword{chron}
