@@ -6,7 +6,7 @@
 
 #define DIGIT(X) ((X) >= '0' && (X) <= '9')
 
-/* start of each month in seconds */
+/* start of each month in days */
 static const int cml[] = { 0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 
 typedef int64_t time_int_t;
@@ -14,6 +14,7 @@ typedef int64_t time_int_t;
 SEXP parse_date(SEXP str, SEXP sRequiredComp) {
     SEXP res;
     double *tsv;
+    int warn_nas = 0;
     int required_components = Rf_asInteger(sRequiredComp);
     int n, i, comp, ts;
     if (TYPEOF(str) != STRSXP) Rf_error("invalid date vector");
@@ -35,16 +36,42 @@ SEXP parse_date(SEXP str, SEXP sRequiredComp) {
     	    } else {
     	        y -= 1970;   
     	    }
-    	    /* we only support the range of 1970-2199 to cover
-    	       unsigned int POSIX time without getting into more leap year mess */
-    	    if (y < 0 || y >= 230 ) {
-        		tsv[i] = NA_REAL;
-        		continue;
+    	    /* we only support the range of 1901-2500 to cover
+    	       unsigned int dates without getting into more leap year mess */
+    	    if (y <= -70) {
+	            tsv[i] = NA_REAL;
+    	        warn_nas = 1;
+	            continue;
     	    } else {
-        		/* adjust for all leap years prior to the current one */
-        	    ts += ((time_int_t)((y + 1) / 4)) * (time_int_t) 1;
-        		if (y > 130) /* 2100 is an exception - not a leap year */
-        		    ts--;
+        		/* adjust for all leap years prior to the current one
+        		 * Work with dates before 1970 first
+        		 */
+                if (y < 0) {
+                    if ((y-2) % 4 == 0) {
+                        ts--;
+                    }
+                    ts += ((time_int_t)((y - 1) / 4)) * (time_int_t) 1;
+                    
+                /* Then work with dates after 1970 */
+                } else {
+                    ts += ((time_int_t)((y + 1) / 4)) * (time_int_t) 1;
+                    if (y > 130) {
+                        /* compensate for 2100, 2200, 2300, 2500:
+                         * NOT leap years */
+                        if (y <= 230) {
+                            ts--;
+                        } else if (y <= 330) {
+                            ts -= 2;
+                        } else if (y <= 530) {
+                            ts -= 3;
+                        } else {
+                            tsv[i] = NA_REAL;
+                            warn_nas = 1;
+                            continue;
+                        }
+                    }
+                }
+        		
         		ts += ((time_int_t) y) * ((time_int_t) 365);
         		comp++;
         		while (*c && !DIGIT(*c)) c++;
@@ -55,8 +82,9 @@ SEXP parse_date(SEXP str, SEXP sRequiredComp) {
         		    }
         		    if (m > 0 && m < 13) {
             			ts += cml[m];
-            			if (m > 2 && (y & 3) == 2 && y != 130 /* 2100 again */) {
-            			    ts++;   
+            			if (m > 2 && (y & 3) == 2 &&
+                            y != 130 && y !=  230 && y != 330 && y != 530 /* 2100 again */) {
+            			    ts++;
             			}
             			comp++;
             			while (*c && !DIGIT(*c)) c++;
@@ -70,6 +98,10 @@ SEXP parse_date(SEXP str, SEXP sRequiredComp) {
     	    }
     	}
     	tsv[i] = (comp >= required_components) ? ts : NA_REAL;
+    }
+    /* send a warning to the console if NAs were introduced */
+    if (warn_nas == 1) {
+        Rf_warning("NAs introduced for out of range dates.");
     }
     return res;
 }
