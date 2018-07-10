@@ -14,15 +14,15 @@ fastDate(x, required.components = 3L)
 \arguments{
   \item{x}{string vector to interpret as dates}
   \item{required.components}{minimum number of timestamp components that
-    are required. For example 3 means only the date is required. If the requirement
-    is not met, the result for that entry will be \code{NA}.}
+    are required. For example 2 means only the year and month are required.
+    If the requirement is not met, the result for that entry will be \code{NA}.}
 }
 %\details{
 %}
 \value{
   Numeric vector of the class \code{Date}. In fact this function
-  computes the numeric vector and calls \code{.Date} to create the
-  result.
+  computes the numeric vector and calls \code{as.Date.numeric} to
+  create the result.
 }
 %\references{
 %}
@@ -33,14 +33,15 @@ fastDate(x, required.components = 3L)
   \code{\link{as.Date}}
 }
 \examples{
-  ## let us generate a bunch of random timestamps until today
-  ts <- as.character(.Date(runif(1e4) * unclass(Sys.Date())))
-
-  ## convert them using as.POSIXct
-  system.time(a <- as.Date(ts))
+  ## generate a list of every date from 1901-2500
+  x <- as.integer(as.Date(c("1901-01-01","2500-12-31")))
+  x <- as.character(as.Date(seq.int(x[1],x[2],1L),origin="1970-01-01"))
+  
+  ## convert them using as.Date
+  system.time(a <- as.Date(x))
 
   ## same using the fast method
-  system.time(b <- fastDate(ts))
+  system.time(b <- fastDate(x))
 
   identical(a, b)
 }
