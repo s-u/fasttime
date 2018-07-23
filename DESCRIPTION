@@ -1,5 +1,5 @@
 Package: fasttime
-Version: 1.0-3
+Version: 1.0-4
 Title: Fast Utility Function for Time Parsing and Conversion
 Author: Simon Urbanek <simon.urbanek@r-project.org>
 Maintainer: Simon Urbanek <simon.urbanek@r-project.org>

@@ -1,2 +1,2 @@
-useDynLib(fasttime, parse_ts)
+useDynLib(fasttime, .registration = TRUE)
 export(fastPOSIXct)

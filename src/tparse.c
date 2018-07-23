@@ -3,6 +3,7 @@
 #include <Rinternals.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <R_ext/Rdynload.h>
 
 #define DIGIT(X) ((X) >= '0' && (X) <= '9')
 
@@ -79,4 +80,16 @@ SEXP parse_ts(SEXP str, SEXP sRequiredComp) {
 	tsv[i] = (comp >= required_components) ? ts : NA_REAL;
     }
     return res;
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"parse_ts",    (DL_FUNC) &parse_ts,   2},
+    {NULL,                    NULL,        0}
+};
+
+void R_init_fasttime(DllInfo *dll) {
+  R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+  R_useDynamicSymbols(dll, FALSE);
+  
+  R_RegisterCCallable("fasttime", "parse_ts",  (DL_FUNC) &parse_ts);
 }
