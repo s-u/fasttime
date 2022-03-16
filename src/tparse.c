@@ -199,3 +199,20 @@ SEXP parse_ts(SEXP str, SEXP sRequiredComp, SEXP sFixed, SEXP sTZ) {
     UNPROTECT(1);
     return res;
 }
+
+
+
+/* registration */
+
+#include <R_ext/Rdynload.h>
+
+static const R_CallMethodDef CallEntries[] = {
+    {"parse_ts", (DL_FUNC) &parse_ts, 4},
+    {NULL,       NULL,                0}
+};
+
+void R_init_fasttime(DllInfo *dll)
+{
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
+}
