@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 
 #define DIGIT(X) ((X) >= '0' && (X) <= '9')
 
@@ -14,7 +15,7 @@ static const int cml[] = { 0, 0, 2678400, 5097600, 7776000, 10368000, 13046400, 
 typedef int64_t time_int_t;
 
 /* separated input version, argitrary length of each component */
-static SEXP parse_ts_(SEXP str, SEXP sRequiredComp) {
+static SEXP parse_ts_(SEXP str, SEXP sRequiredComp, int date) {
     SEXP res;
     double *tsv;
     int required_components = Rf_asInteger(sRequiredComp);
@@ -78,7 +79,7 @@ static SEXP parse_ts_(SEXP str, SEXP sRequiredComp) {
 		}
 	    }
 	}
-	tsv[i] = (comp >= required_components) ? ts : NA_REAL;
+	tsv[i] = (comp >= required_components) ? (date ? ts / 86400 : ts) : NA_REAL;
     }
     return res;
 }
@@ -86,7 +87,7 @@ static SEXP parse_ts_(SEXP str, SEXP sRequiredComp) {
 /* fixed version - limits components to <4/2><2><2><2><2><*>
    and does not need separators. Note that it will still skip
    separators if present */
-static SEXP fparse_ts_(SEXP str, SEXP sRequiredComp, int year_length) {
+static SEXP fparse_ts_(SEXP str, SEXP sRequiredComp, int date, int year_length) {
     SEXP res;
     double *tsv;
     int required_components = Rf_asInteger(sRequiredComp);
@@ -154,7 +155,7 @@ static SEXP fparse_ts_(SEXP str, SEXP sRequiredComp, int year_length) {
 		}
 	    }
 	}
-	tsv[i] = (comp >= required_components) ? ts : NA_REAL;
+	tsv[i] = (comp >= required_components) ? (date ? ts / 86400 : ts) : NA_REAL;
     }
     return res;
 }
@@ -164,22 +165,37 @@ static SEXP fparse_ts_(SEXP str, SEXP sRequiredComp, int year_length) {
 static SEXP sym_tzone;
 
 SEXP parse_ts(SEXP str, SEXP sRequiredComp, SEXP sFixed, SEXP sTZ) {
+    SEXP res, cls;
     int fixed = Rf_asInteger(sFixed);
-    SEXP res = (fixed < 1) ? parse_ts_(str, sRequiredComp) : fparse_ts_(str, sRequiredComp, fixed);
-    SEXP cls;
+    int date = 0;
+
+    /* we (ab)use tz of "Date" to signal that the user wants a date ;) */
+    if (TYPEOF(sTZ) == STRSXP &&
+	LENGTH(sTZ) == 1 &&
+	!strcmp(CHAR(STRING_ELT(sTZ, 0)), "Date"))
+	date = 1;
+
+    /* call the correct parser */
+    res = (fixed < 1) ? parse_ts_(str, sRequiredComp, date) : fparse_ts_(str, sRequiredComp, date, fixed);
+
     /* non-string values will make us return the naked object */
     if (TYPEOF(sTZ) != STRSXP && sTZ != R_NilValue) return res;
-    /* if TZ is a string, turn this into a POSIXct object */
     PROTECT(res);
-    if (sTZ != R_NilValue) {
-	if (!sym_tzone)
-	    sym_tzone = Rf_install("tzone");
-	Rf_setAttrib(res, sym_tzone, sTZ);
+    if (date)
+	Rf_classgets(res, Rf_mkString("Date"));
+    else {
+	/* if TZ is a string, turn this into a POSIXct object */
+	if (sTZ != R_NilValue) {
+	    if (!sym_tzone)
+		sym_tzone = Rf_install("tzone");
+	    Rf_setAttrib(res, sym_tzone, sTZ);
+	}
+	cls = PROTECT(allocVector(STRSXP, 2));
+	SET_STRING_ELT(cls, 0, Rf_mkChar("POSIXct"));
+	SET_STRING_ELT(cls, 1, Rf_mkChar("POSIXt"));    
+	Rf_classgets(res, cls);
+	UNPROTECT(1);
     }
-    cls = PROTECT(allocVector(STRSXP, 2));
-    SET_STRING_ELT(cls, 0, Rf_mkChar("POSIXct"));
-    SET_STRING_ELT(cls, 1, Rf_mkChar("POSIXt"));    
-    Rf_classgets(res, cls);
-    UNPROTECT(2);
+    UNPROTECT(1);
     return res;
 }

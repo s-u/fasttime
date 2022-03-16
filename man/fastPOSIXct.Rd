@@ -1,5 +1,6 @@
 \name{fastPOSIXct}
 \alias{fastPOSIXct}
+\alias{fastDate}
 \title{
   Fast version of \code{as.POSIXct.character} for GMT fixed format.
 }
@@ -12,11 +13,15 @@
   are supported and \code{fastPOSIXct} accepts dates up to year 2199.
 
   It is extremely fast (compared to \code{as.POSIXct} by several orders
-  of magnitude (on some platfroms 1000x faster) since it uses pure text
+  of magnitude (on some platforms 1000x faster) since it uses pure text
   parsing and no system calls.
+
+  \code{fastDate} is a faster shorthand for
+  \code{as.Date(fastPOSIXct(x, "GMT", 3L, fixed))}.
 }
 \usage{
 fastPOSIXct(x, tz = NULL, required.components = 3L, fixed = NA)
+fastDate(x, fixed = NA)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -43,15 +48,16 @@ fastPOSIXct(x, tz = NULL, required.components = 3L, fixed = NA)
   \code{"2022-01-01T09:15:00Z"}.
 
   If the format uses no separators then \code{fixed} can be set to the
-  length of the year component (in digits) and months through
+  length of the year component (in digits) -- months through
   minutes are assumed to have at most two digits each. For example, the
   following call will have the same timestamp result as above:
   \code{fastPOSIXct("2201010915", fixed=2)}. Note that separators are
   still allowed in the fixed parsing and will terminate the preceding
-  group.
+  group so \code{"220101 9:15"} would yield the same result.
 }
 \value{
-  Numeric vector of the class \code{POSIXct}.
+  Numeric vector of the class \code{POSIXct} (\code{fastPOSIXct}) or
+  \code{Date} (\code{fastDate}).
 }
 %\references{
 %}
@@ -73,6 +79,13 @@ fastPOSIXct(x, tz = NULL, required.components = 3L, fixed = NA)
 
   identical(a, b)
 
+  ## same for dates
+  day <- substr(ts, 1, 10)
+  
+  system.time(da <- as.Date(day))
+  system.time(db <- fastDate(day))
+  identical(da, db)
+  
   ## some parsing examples
   fastPOSIXct("2022-01-05 09:15", "GMT")
   fastPOSIXct("22/1/1, the time is 9:15", "GMT")

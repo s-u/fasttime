@@ -4,6 +4,8 @@ NEWS for fasttime package
     o	add fixed= parameter allowing to parse timestamps
 	without separators (#4)
 
+    o	add fastDate() (#5)
+
 
 1.0-3	2018-01-05
     o	use registered C symbol for faster look-up
